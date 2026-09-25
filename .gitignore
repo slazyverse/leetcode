@@ -1,0 +1,28 @@
+# ─── Editors & IDEs ──────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# ─── Operating system ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Compiled output ─────────────────────────────────────────────────────────
+*.class
+*.o
+*.out
+*.exe
+*.pyc
+__pycache__/
+target/
+bin/
+build/
+
+# ─── Local scratch ───────────────────────────────────────────────────────────
+scratch/
+playground/
+*.local

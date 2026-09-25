@@ -1,0 +1,29 @@
+# Normalize line endings on commit; check out native on each platform.
+* text=auto eol=lf
+
+# Explicit handling for source files synced from LeetCode.
+*.java   text diff=java
+*.py     text diff=python
+*.cpp    text diff=cpp
+*.c      text diff=cpp
+*.cs     text diff=csharp
+*.js     text
+*.ts     text
+*.go     text diff=golang
+*.rs     text diff=rust
+*.kt     text
+*.swift  text diff=swift
+*.rb     text diff=ruby
+*.php    text diff=php
+*.scala  text
+*.dart   text
+*.ex     text
+*.sql    text
+*.md     text diff=markdown
+
+# Keep generated indexes out of pull-request diffs.
+docs/INDEX.md linguist-generated=true
+
+# Solutions drive the repository language statistics; docs and tooling do not.
+docs/**      linguist-documentation=true
+tools/**     linguist-vendored=true

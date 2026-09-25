@@ -1,0 +1,88 @@
+name: Progress
+
+# Solutions are pushed straight to `main` by the LeetSync browser extension, one
+# commit per file. This workflow reacts to those pushes: it tests the generator,
+# regenerates the progress tables and the problem index, and separately validates
+# that every problem directory is well-formed.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "solutions/**"
+      - "tools/**"
+      - ".github/workflows/progress.yml"
+  pull_request:
+    paths:
+      - "tools/**"
+      - ".github/workflows/progress.yml"
+  workflow_dispatch:
+
+# Only the newest sync matters; cancel any run a later push supersedes.
+concurrency:
+  group: progress-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test the generator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tools -p "test_*.py" --verbose
+
+  validate:
+    name: Validate solution layout
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check every problem directory against the conventions
+        run: python tools/generate_stats.py --check
+
+  generate:
+    name: Regenerate statistics
+    # A generator that fails its own tests must not be trusted to rewrite the README.
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so the generator can date each problem from its commits.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Regenerate README and problem index
+        run: python tools/generate_stats.py
+
+      - name: Commit if anything changed
+        run: |
+          if git diff --quiet -- README.md docs/INDEX.md; then
+            echo "Statistics already current; nothing to commit."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md docs/INDEX.md
+          git commit -m "chore(stats): refresh progress tables and problem index"
+          # The remote may have advanced: the extension commits one file at a time.
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
